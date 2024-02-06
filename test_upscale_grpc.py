@@ -29,11 +29,17 @@ os.environ['STABILITY_KEY'] = os.environ.get('STABILITY_KEY')
 #데이터 준비
 # Import our local image to use as a reference for our upscaled image.
 # The 'img' variable below is set to a local file for upscaling, however if you are already running a generation call and have an image artifact available, you can pass that image artifact to the upscale function instead.
-img = Image.open('./sample/landscape0.png')
-
+INPUT_PATH = './sample/human0.png'
+OUT_PATH = './outputs'
 
 def test_upscale():
-        
+
+    # setting path 
+    img = Image.open(INPUT_PATH)
+    img_name = 'upscaled_' + INPUT_PATH.split('/')[-1]
+    out_img_path = os.path.join(OUT_PATH,img_name)
+
+# -----------------------------gRPC stability ai code ------------------------
     # Set up our connection to the API.
     stability_api = client.StabilityInference(
         key=os.environ['STABILITY_KEY'], # API Key reference.
@@ -41,17 +47,12 @@ def test_upscale():
                                         # Available Upscaling Engines: esrgan-v1-x2plus
         verbose=True, # Print debug messages.
     )
-
-
-
     answers = stability_api.upscale(
         init_image=img, # Pass our image to the API and call the upscaling process.
         # width=1024, # Optional parameter to specify the desired output width.
     )
-
     # Set up our warning to print to the console if the adult content classifier is tripped.
     # If adult content classifier is not tripped, save our image.
-
     for resp in answers:
         for artifact in resp.artifacts:
             if artifact.finish_reason == generation.FILTER: # 자체 필터 걸렸다는 워닝 출력 
@@ -59,5 +60,10 @@ def test_upscale():
                     "Your request activated the API's safety filters and could not be processed."
                     "Please submit a different image and try again.")
             if artifact.type == generation.ARTIFACT_IMAGE: # 아티펙트 타입이 이미지이면 이미지 열어서 원하는 path에 save
-                big_img = Image.open(io.BytesIO(artifact.binary))
-                big_img.save("imageupscaled" + ".png") # Save our image to a local file.
+                out_img = Image.open(io.BytesIO(artifact.binary))
+                if not os.path.exists(OUT_PATH):
+                    os.mkdir(OUT_PATH)
+
+                out_img.save(out_img_path) # Save our image to a local file.
+
+    assert os.path.exists(out_img_path) == True
