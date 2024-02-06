@@ -57,29 +57,33 @@ def test_no_token_case():
         result_path = grpc_upscale_call(image=img, origin_img_name='upscaled.png')
     except UpscaleException as e:
         assert e.code == 401 and e.message == "Failed to connect. Contact service administrator." and e.log == "Upscale API request error with non token. Please purchase tk"
-    assert os.path.exists(result_path)
 
-# 시나리오 3 
+
+# 시나리오 3
 def test_wrong_image_path_case():
     # given : 없는 이미지 주소 (데이터 오류)
     # when : upscale 요청?? 그 전에 이미지 open할 때
-    # then : image not found error 발생 -> 사용자보다 로그가 중요할 듯 (리사이즈 크롭한 이미지가 들어와야하니까)
+    # then : image not found error
     try:
         img = get_image_from_path('abstract123.png')
     except UpscaleException as e:
         assert e.code == 404 and e.message == 'Failed to upload image. try again.' and e.log == 'Wrong image path, Please check the input image path'
 
+
 # 시나리오 4
 # unnormal image
 # Create a new black image
 black_image = Image.new('RGB', (768, 768), (0, 0, 0))
+black_image.save('./sample/black_image.png')
 def test_black_image_given_case():
     # given : 검은색 화면 또는 흰색으로 채워진 이미지(잘못된 이미지)
     # when : upscale 요청
     # then : unormal image error 발생  -> 메시지 중요
-    with pytest.raises(UpscaleException):
-        if all(pixel == (0, 0, 0) for pixel in list(black_image.getdata())) or all(pixel == (255, 255, 255) for pixel in list(black_image.getdata())):
-            raise UpscaleException(**UpscaleErrorCode.WrongImageError.value)
+    try:
+        img = get_image_from_path('black_image.png')
+    except UpscaleException as e:
+        assert e.code == 400 and e.message == 'Failed to upload image. Please take a painting again' and e.log == 'Requested image is entirely black or white.'
+
 
 # 시나리오 5
 
