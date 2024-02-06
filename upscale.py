@@ -4,6 +4,22 @@ from stability_sdk import client
 import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 import warnings
 
+
+'''
+gRPC 방식 stability API 호출 코드 
+
+esrgan-v1-x2plus 엔진으로 사용시 0.2토큰 ($0.002)
+
+가능한 파라미터 
+init_image= 
+width= and height= parameters are accepted.
+
+only width= OR height=  가능  (width 와 height 둘 다 동시에 설정 X )
+
+If no width= or height= parameter is provided, 
+    the image will be upscaled to 2x or 4x its dimensions by default depending on the engine in use.
+'''
+
 # 검사하는 코드 
 def check_image(original_image_path,generated_image_path):
     '''
