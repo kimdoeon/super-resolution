@@ -7,7 +7,7 @@ from io import BytesIO
 import grpc
 import pytest
 from dotenv import load_dotenv
-from eeeee import *
+from eeeee import UpscaleException
 from error_code import UpscaleErrorCode
 from upscale import get_image_from_path, grpc_upscale_call
 load_dotenv()
@@ -47,43 +47,17 @@ def test_can_gen_upscale_img():
     assert os.path.exists(result_path)
 
 
-
-# 시나리오 2 
+# 시나리오 2
 def test_no_token_case():
-    # given : 유효한 데이터 (정상 이미지 주소) 
+    # given : 유효한 데이터 (정상 이미지 주소)
     # when : upscale 요청
     # then : 토큰이 없는 경우 Token error 발생
-    # -----------------------------gRPC stability ai code ------------------------
-    # Set up our connection to the API.
-    stability_api = client.StabilityInference(
-        key = no_token_key, # API Key reference.
-        upscale_engine="esrgan-v1-x2plus", # The name of the upscaling model we want to use.
-                                        # Available Upscaling Engines: esrgan-v1-x2plus
-        verbose=True, # Print debug messages.
-    )
-    answers = stability_api.upscale(
-        init_image = img, # Pass our image to the API and call the upscaling process.
-        width = 1024, # Optional parameter to specify the desired output width.
-    )
-    # Set up our warning to print to the console if the adult content classifier is tripped.
-    # If adult content classifier is not tripped, save our image.
-    with pytest.raises(UpscaleException):
-        try:
-            for resp in answers:
-                for artifact in resp.artifacts:
-                    if artifact.finish_reason == generation.FILTER: # 자체 필터 걸렸다는 워닝 출력 
-                        warnings.warn(
-                            "Your request activated the API's safety filters and could not be processed."
-                            "Please submit a different image and try again.")
-                    if artifact.type == generation.ARTIFACT_IMAGE: # 아티펙트 타입이 이미지이면 이미지 열어서 원하는 path에 save
-                        out_img = Image.open(BytesIO(artifact.binary))
-                        if not os.path.exists(OUT_BASE):
-                            os.mkdir(OUT_BASE)
-
-                        out_img.save(OUT_PATH) # Save our image to a local file.
-        except grpc.RpcError as e:
-            raise UpscaleException(**UpscaleErrorCode.NonTokenError.value)
-    
+    img = get_image_from_path('abstract1.png')
+    try:
+        result_path = grpc_upscale_call(image=img, origin_img_name='upscaled.png')
+    except UpscaleException as e:
+        assert e.code == 401 and e.message == "Failed to connect. Contact service administrator." and e.log == "Upscale API request error with non token. Please purchase tk"
+    assert os.path.exists(result_path)
 
 # 시나리오 3 
 Wrong_image_path = './sample/no_image.png'

@@ -4,6 +4,9 @@ from stability_sdk import client
 import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 import warnings
 from io import BytesIO
+from eeeee import UpscaleException
+from error_code import UpscaleErrorCode
+import grpc
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -23,7 +26,9 @@ If no width= or height= parameter is provided,
 '''
 
 # ------------------
-user_folder_path = './sample' # self
+user_folder_path = './sample'  # self
+
+
 def get_image_from_path(origin_img_name: str):
     """
     Get image for Upscale 
@@ -67,18 +72,26 @@ def grpc_upscale_call(image: Image, origin_img_name: str):
         width=width,  # Optional parameter to specify the desired output width.
     )
     # If adult content classifier is not tripped, save our image.
-    for resp in answers:
-        for artifact in resp.artifacts:
-            if artifact.finish_reason == generation.FILTER:  # 자체 필터 걸렸다는 워닝 출력
-                warnings.warn(
-                    "Your request activated the API's safety filters and could not be processed."
-                    "Please submit a different image and try again.")
-            if artifact.type == generation.ARTIFACT_IMAGE:  # 아티펙트 타입이 이미지이면 이미지 열어서 원하는 path에 save
-                out_img = Image.open(BytesIO(artifact.binary))
-                if not os.path.exists(user_folder_path):
-                    os.mkdir(user_folder_path)
+    try:
+        for resp in answers:
+            for artifact in resp.artifacts:
+                if artifact.finish_reason == generation.FILTER:  # 자체 필터 걸렸다는 워닝 출력
+                    warnings.warn(
+                        "Your request activated the API's safety filters and could not be processed."
+                        "Please submit a different image and try again.")
+                if artifact.type == generation.ARTIFACT_IMAGE:  # 아티펙트 타입이 이미지이면 이미지 열어서 원하는 path에 save
+                    out_img = Image.open(BytesIO(artifact.binary))
+                    if not os.path.exists(user_folder_path):
+                        os.mkdir(user_folder_path)
 
-                out_img.save(origin_img_path)  # Save our image to a local file.
+                    out_img.save(origin_img_path)  # Save our image to a local file.
+    except grpc.RpcError as e:
+        if e.code().value[0] == 8:
+            raise UpscaleException(**UpscaleErrorCode.NonTokenError.value, error=e)
+        elif e.code().value[0] == 16:
+            raise UpscaleException(**UpscaleErrorCode.WrongApiKeyError.value, error=e)
+        else:
+            raise UpscaleException(**UpscaleErrorCode.APIError.value, error=e)
     return origin_img_path
 
 
