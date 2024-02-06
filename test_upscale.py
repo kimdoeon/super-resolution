@@ -1,30 +1,9 @@
-from PIL import Image 
+from PIL import Image
 import os
-from stability_sdk import client
-import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
-import warnings
-from io import BytesIO
-import grpc
-import pytest
 from dotenv import load_dotenv
 from eeeee import UpscaleException
-from error_code import UpscaleErrorCode
 from upscale import get_image_from_path, grpc_upscale_call
 load_dotenv()
-
-# normal key
-key = os.environ.get('STABILITY_KEY')
-host = os.environ.get('STABILITY_HOST')
-
-
-no_token_key = os.environ.get("NO_TOKEN_KEY")
-
-# normal image 
-IN_PATH = './sample/abstract0.png'
-OUT_BASE = './outputs'
-img_name = 'rescaled' + IN_PATH.split('/')[-1]
-OUT_PATH = os.path.join(OUT_BASE, img_name)
-img = Image.open(IN_PATH)
 
 
 # test can get image from path
@@ -43,6 +22,9 @@ def test_can_gen_upscale_img():
     result_path = grpc_upscale_call(image=img, origin_img_name='upscaled.png')
 
     assert os.path.exists(result_path)
+
+
+no_token_key = os.environ.get("NO_TOKEN_KEY")
 
 
 # 시나리오 2
@@ -73,6 +55,8 @@ def test_wrong_image_path_case():
 # Create a new black image
 black_image = Image.new('RGB', (768, 768), (0, 0, 0))
 black_image.save('./sample/black_image.png')
+
+
 def test_black_image_given_case():
     # given : 검은색 화면 또는 흰색으로 채워진 이미지(잘못된 이미지)
     # when : upscale 요청
@@ -97,17 +81,3 @@ def test_incorrect_api_key_case():
         result_path = grpc_upscale_call(image=img, origin_img_name='upscaled.png', api_key=wrong_key)
     except UpscaleException as e:
         assert e.code == 400 and e.message == 'Failed to request. Contact service administrator.' and e.log == 'Wrong API key. Please check your API key'
-    
-# 시나리오6 
-
-# Create a new black image
-black_image = Image.new('RGB', (768, 768), (0, 0, 0))
-black_image.save(OUT_BASE + '/black_output.png')
-def test_black_image_given_case():
-    # given : 잘못된 output 이미지 결과 (온통 검은 화면)
-    # when : output 이미지 저장할 때, 
-    # then : unormal output error ? 
-    out_image = Image.open(OUT_BASE + '/black_output.png')
-    with pytest.raises(UpscaleException):
-        if all(pixel == (0, 0, 0) for pixel in list(out_image.getdata())) or all(pixel == (255, 255, 255) for pixel in list(out_image.getdata())):
-            raise UpscaleException(**UpscaleErrorCode.WrongImageOutError.value)
