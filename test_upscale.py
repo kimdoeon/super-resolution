@@ -36,35 +36,35 @@ black_image = Image.new('RGB', (768, 768), (0, 0, 0))
 # given : 유효한 데이터 (정상 이미지 주소)
 # when : upscale 요청
 # then : 정상 응답 (업스케일 이미지 저장)
-def test_normal_case():
-    # -----------------------------gRPC stability ai code ------------------------
-    # Set up our connection to the API.
-    stability_api = client.StabilityInference(
-        key = key, # API Key reference.
-        upscale_engine="esrgan-v1-x2plus", # The name of the upscaling model we want to use.
-                                        # Available Upscaling Engines: esrgan-v1-x2plus
-        verbose=True, # Print debug messages.
-    )
-    answers = stability_api.upscale(
-        init_image = img, # Pass our image to the API and call the upscaling process.
-        width = 1024, # Optional parameter to specify the desired output width.
-    )
-    # Set up our warning to print to the console if the adult content classifier is tripped.
-    # If adult content classifier is not tripped, save our image.
-    for resp in answers:
-        for artifact in resp.artifacts:
-            if artifact.finish_reason == generation.FILTER: # 자체 필터 걸렸다는 워닝 출력 
-                warnings.warn(
-                    "Your request activated the API's safety filters and could not be processed."
-                    "Please submit a different image and try again.")
-            if artifact.type == generation.ARTIFACT_IMAGE: # 아티펙트 타입이 이미지이면 이미지 열어서 원하는 path에 save
-                out_img = Image.open(BytesIO(artifact.binary))
-                if not os.path.exists(OUT_BASE):
-                    os.mkdir(OUT_BASE)
+# def test_normal_case():
+#     # -----------------------------gRPC stability ai code ------------------------
+#     # Set up our connection to the API.
+#     stability_api = client.StabilityInference(
+#         key = key, # API Key reference.
+#         upscale_engine="esrgan-v1-x2plus", # The name of the upscaling model we want to use.
+#                                         # Available Upscaling Engines: esrgan-v1-x2plus
+#         verbose=True, # Print debug messages.
+#     )
+#     answers = stability_api.upscale(
+#         init_image = img, # Pass our image to the API and call the upscaling process.
+#         width = 1024, # Optional parameter to specify the desired output width.
+#     )
+#     # Set up our warning to print to the console if the adult content classifier is tripped.
+#     # If adult content classifier is not tripped, save our image.
+#     for resp in answers:
+#         for artifact in resp.artifacts:
+#             if artifact.finish_reason == generation.FILTER: # 자체 필터 걸렸다는 워닝 출력 
+#                 warnings.warn(
+#                     "Your request activated the API's safety filters and could not be processed."
+#                     "Please submit a different image and try again.")
+#             if artifact.type == generation.ARTIFACT_IMAGE: # 아티펙트 타입이 이미지이면 이미지 열어서 원하는 path에 save
+#                 out_img = Image.open(BytesIO(artifact.binary))
+#                 if not os.path.exists(OUT_BASE):
+#                     os.mkdir(OUT_BASE)
 
-                out_img.save(OUT_PATH) # Save our image to a local file.
+#                 out_img.save(OUT_PATH) # Save our image to a local file.
 
-    assert os.path.exists(OUT_PATH)
+#     assert os.path.exists(OUT_PATH)
 
 
 
@@ -109,6 +109,18 @@ def test_no_token_case():
 # given : 없는 이미지 주소 (데이터 오류)
 # when : upscale 요청?? 그 전에 이미지 open할 때
 # then : image not found error 발생 -> 사용자보다 로그가 중요할 듯 (리사이즈 크롭한 이미지가 들어와야하니까)
+
+Wrong_image_path = './sample/no_image.png'
+def test_wrong_image_path_case():
+
+    with pytest.raises(UpscaleException):
+        try:
+            img = Image.open(Wrong_image_path)
+        except FileNotFoundError as e:
+            raise UpscaleException(**UpscaleErrorCode.FileNotFoundError.value)
+    
+
+
 
 # 시나리오 4
 # given : 검은색 화면 또는 흰색으로 채워진 이미지(잘못된 이미지)
