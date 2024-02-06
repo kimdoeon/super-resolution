@@ -12,7 +12,6 @@ only width= OR height=  가능  (width 와 height 둘 다 동시에 설정 X )
 If no width= or height= parameter is provided, 
     the image will be upscaled to 2x or 4x its dimensions by default depending on the engine in use.
 '''
-
 import os
 import io
 import warnings
@@ -67,3 +66,12 @@ def test_upscale():
                 out_img.save(out_img_path) # Save our image to a local file.
 
     assert os.path.exists(out_img_path) == True
+
+# 시나리오 1 
+
+
+
+# 시나리오 2 
+    
+
+# 시나리오 3 
