@@ -21,38 +21,43 @@ from stability_sdk import client
 import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 from dotenv import load_dotenv
 
+# 환경변수 설정
 load_dotenv()
-
 os.environ['STABILITY_HOST'] = os.environ.get('STABILITY_HOST')
 os.environ['STABILITY_KEY'] = os.environ.get('STABILITY_KEY')
 
-
-# Set up our connection to the API.
-stability_api = client.StabilityInference(
-    key=os.environ['STABILITY_KEY'], # API Key reference.
-    upscale_engine="esrgan-v1-x2plus", # The name of the upscaling model we want to use.
-                                       # Available Upscaling Engines: esrgan-v1-x2plus
-    verbose=True, # Print debug messages.
-)
-
+#데이터 준비
 # Import our local image to use as a reference for our upscaled image.
 # The 'img' variable below is set to a local file for upscaling, however if you are already running a generation call and have an image artifact available, you can pass that image artifact to the upscale function instead.
 img = Image.open('./sample/landscape0.png')
 
-answers = stability_api.upscale(
-    init_image=img, # Pass our image to the API and call the upscaling process.
-    # width=1024, # Optional parameter to specify the desired output width.
-)
 
-# Set up our warning to print to the console if the adult content classifier is tripped.
-# If adult content classifier is not tripped, save our image.
+def test_upscale():
+        
+    # Set up our connection to the API.
+    stability_api = client.StabilityInference(
+        key=os.environ['STABILITY_KEY'], # API Key reference.
+        upscale_engine="esrgan-v1-x2plus", # The name of the upscaling model we want to use.
+                                        # Available Upscaling Engines: esrgan-v1-x2plus
+        verbose=True, # Print debug messages.
+    )
 
-for resp in answers:
-    for artifact in resp.artifacts:
-        if artifact.finish_reason == generation.FILTER: # 자체 필터 걸렸다는 워닝 출력 
-            warnings.warn(
-                "Your request activated the API's safety filters and could not be processed."
-                "Please submit a different image and try again.")
-        if artifact.type == generation.ARTIFACT_IMAGE: # 아티펙트 타입이 이미지이면 이미지 열어서 원하는 path에 save
-            big_img = Image.open(io.BytesIO(artifact.binary))
-            big_img.save("imageupscaled" + ".png") # Save our image to a local file.
+
+
+    answers = stability_api.upscale(
+        init_image=img, # Pass our image to the API and call the upscaling process.
+        # width=1024, # Optional parameter to specify the desired output width.
+    )
+
+    # Set up our warning to print to the console if the adult content classifier is tripped.
+    # If adult content classifier is not tripped, save our image.
+
+    for resp in answers:
+        for artifact in resp.artifacts:
+            if artifact.finish_reason == generation.FILTER: # 자체 필터 걸렸다는 워닝 출력 
+                warnings.warn(
+                    "Your request activated the API's safety filters and could not be processed."
+                    "Please submit a different image and try again.")
+            if artifact.type == generation.ARTIFACT_IMAGE: # 아티펙트 타입이 이미지이면 이미지 열어서 원하는 path에 save
+                big_img = Image.open(io.BytesIO(artifact.binary))
+                big_img.save("imageupscaled" + ".png") # Save our image to a local file.
