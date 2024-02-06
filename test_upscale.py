@@ -9,6 +9,7 @@ import pytest
 from dotenv import load_dotenv
 from eeeee import *
 from error_code import UpscaleErrorCode
+from upscale import get_image_from_path, grpc_upscale_call
 load_dotenv()
 
 #normal key
@@ -24,43 +25,26 @@ no_token_key = os.environ.get("NO_TOKEN_KEY")
 IN_PATH = './sample/abstract0.png'
 OUT_BASE = './outputs'
 img_name = 'rescaled' + IN_PATH.split('/')[-1]
-OUT_PATH = os.path.join(OUT_BASE,img_name)
+OUT_PATH = os.path.join(OUT_BASE, img_name)
 img = Image.open(IN_PATH)
 
 
-# 시나리오 1 : 
-# def test_normal_case():
+# test can get image from path
+def test_can_get_image_from_path():
+    img = get_image_from_path('abstract1.png')
+
+    assert isinstance(img, Image.Image)
+
+
+# 시나리오 1 : test can generate upscale image from img
+def test_can_gen_upscale_img():
     # given : 유효한 데이터 (정상 이미지 주소)
     # when : upscale 요청
     # then : 정상 응답 (업스케일 이미지 저장)
-#     # -----------------------------gRPC stability ai code ------------------------
-#     # Set up our connection to the API.
-#     stability_api = client.StabilityInference(
-#         key = key, # API Key reference.
-#         upscale_engine="esrgan-v1-x2plus", # The name of the upscaling model we want to use.
-#                                         # Available Upscaling Engines: esrgan-v1-x2plus
-#         verbose=True, # Print debug messages.
-#     )
-#     answers = stability_api.upscale(
-#         init_image = img, # Pass our image to the API and call the upscaling process.
-#         width = 1024, # Optional parameter to specify the desired output width.
-#     )
-#     # Set up our warning to print to the console if the adult content classifier is tripped.
-#     # If adult content classifier is not tripped, save our image.
-#     for resp in answers:
-#         for artifact in resp.artifacts:
-#             if artifact.finish_reason == generation.FILTER: # 자체 필터 걸렸다는 워닝 출력 
-#                 warnings.warn(
-#                     "Your request activated the API's safety filters and could not be processed."
-#                     "Please submit a different image and try again.")
-#             if artifact.type == generation.ARTIFACT_IMAGE: # 아티펙트 타입이 이미지이면 이미지 열어서 원하는 path에 save
-#                 out_img = Image.open(BytesIO(artifact.binary))
-#                 if not os.path.exists(OUT_BASE):
-#                     os.mkdir(OUT_BASE)
+    img = get_image_from_path('abstract1.png')
+    result_path = grpc_upscale_call(image=img, origin_img_name='upscaled.png')
 
-#                 out_img.save(OUT_PATH) # Save our image to a local file.
-
-#     assert os.path.exists(OUT_PATH)
+    assert os.path.exists(result_path)
 
 
 
@@ -168,7 +152,7 @@ def test_incorrect_api_key_case():
 
 # Create a new black image
 black_image = Image.new('RGB', (768, 768), (0, 0, 0))
-black_image.save(OUT_BASE + 'black_output.png')
+black_image.save(OUT_BASE + '/black_output.png')
 def test_black_image_given_case():
     # given : 잘못된 output 이미지 결과 (온통 검은 화면)
     # when : output 이미지 저장할 때, 
