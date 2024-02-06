@@ -12,7 +12,12 @@ class UpscaleErrorCode(Enum):
         "log": "API Error. Please check api."
     }
     FileNotFoundError = {
-        "code": 404, #서버 에러 모르는 에러
+        "code": 404, 
         "message": "Failed to upload image. try again.",
         "log": "Wrong image path, Please check the input image path"
+    }
+    WrongImageError = {
+        "code": 400,
+        "message": "Failed to upload image. Please take a painting again",
+        "log": "Requested image is entirely black or white."     
     }

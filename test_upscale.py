@@ -28,15 +28,11 @@ OUT_PATH = os.path.join(OUT_BASE,img_name)
 img = Image.open(IN_PATH)
 
 
-# unnormal image
-# Create a new black image with dimensions 1024x1024
-black_image = Image.new('RGB', (768, 768), (0, 0, 0))
-
 # 시나리오 1 : 
-# given : 유효한 데이터 (정상 이미지 주소)
-# when : upscale 요청
-# then : 정상 응답 (업스케일 이미지 저장)
 # def test_normal_case():
+    # given : 유효한 데이터 (정상 이미지 주소)
+    # when : upscale 요청
+    # then : 정상 응답 (업스케일 이미지 저장)
 #     # -----------------------------gRPC stability ai code ------------------------
 #     # Set up our connection to the API.
 #     stability_api = client.StabilityInference(
@@ -69,10 +65,10 @@ black_image = Image.new('RGB', (768, 768), (0, 0, 0))
 
 
 # 시나리오 2 
-# given : 유효한 데이터 (정상 이미지 주소) 
-# when : upscale 요청
-# then : 토큰이 없는 경우 Token error 발생
 def test_no_token_case():
+    # given : 유효한 데이터 (정상 이미지 주소) 
+    # when : upscale 요청
+    # then : 토큰이 없는 경우 Token error 발생
     # -----------------------------gRPC stability ai code ------------------------
     # Set up our connection to the API.
     stability_api = client.StabilityInference(
@@ -106,26 +102,29 @@ def test_no_token_case():
     
 
 # 시나리오 3 
-# given : 없는 이미지 주소 (데이터 오류)
-# when : upscale 요청?? 그 전에 이미지 open할 때
-# then : image not found error 발생 -> 사용자보다 로그가 중요할 듯 (리사이즈 크롭한 이미지가 들어와야하니까)
-
 Wrong_image_path = './sample/no_image.png'
 def test_wrong_image_path_case():
+    # given : 없는 이미지 주소 (데이터 오류)
+    # when : upscale 요청?? 그 전에 이미지 open할 때
+    # then : image not found error 발생 -> 사용자보다 로그가 중요할 듯 (리사이즈 크롭한 이미지가 들어와야하니까)
 
     with pytest.raises(UpscaleException):
         try:
             img = Image.open(Wrong_image_path)
         except FileNotFoundError as e:
             raise UpscaleException(**UpscaleErrorCode.FileNotFoundError.value)
-    
-
-
 
 # 시나리오 4
-# given : 검은색 화면 또는 흰색으로 채워진 이미지(잘못된 이미지)
-# when : upscale 요청
-# then : unormal image error 발생  -> 메시지 중요
+# unnormal image
+# Create a new black image
+black_image = Image.new('RGB', (768, 768), (0, 0, 0))
+def test_black_image_given_case():
+    # given : 검은색 화면 또는 흰색으로 채워진 이미지(잘못된 이미지)
+    # when : upscale 요청
+    # then : unormal image error 발생  -> 메시지 중요
+    with pytest.raises(UpscaleException):
+        if all(pixel == (0, 0, 0) for pixel in list(black_image.getdata())) or all(pixel == (255, 255, 255) for pixel in list(black_image.getdata())):
+            raise UpscaleException(**UpscaleErrorCode.WrongImageError.value)
 
 # 시나리오 5
 # given : 잘못된 API key or 빈 API 키 + 정상 이미지 
