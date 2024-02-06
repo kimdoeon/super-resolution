@@ -53,7 +53,7 @@ api_key = os.environ.get('STABILITY_KEY')
 width = 1024
 
 
-def grpc_upscale_call(image: Image, origin_img_name: str):
+def grpc_upscale_call(image: Image, origin_img_name: str, api_key=api_key):
     """
     Get generated upscaled image from stability ai grpc
     Params:

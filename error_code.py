@@ -23,7 +23,7 @@ class UpscaleErrorCode(Enum):
         "log": "Requested image is entirely black or white."
     }
     WrongApiKeyError = {
-        "code": 404,
+        "code": 400,
         "message": "Failed to request. Contact service administrator.",
         "log": "Wrong API key. Please check your API key"
     }
