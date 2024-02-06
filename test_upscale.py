@@ -60,17 +60,14 @@ def test_no_token_case():
     assert os.path.exists(result_path)
 
 # 시나리오 3 
-Wrong_image_path = './sample/no_image.png'
 def test_wrong_image_path_case():
     # given : 없는 이미지 주소 (데이터 오류)
     # when : upscale 요청?? 그 전에 이미지 open할 때
     # then : image not found error 발생 -> 사용자보다 로그가 중요할 듯 (리사이즈 크롭한 이미지가 들어와야하니까)
-
-    with pytest.raises(UpscaleException):
-        try:
-            img = Image.open(Wrong_image_path)
-        except FileNotFoundError as e:
-            raise UpscaleException(**UpscaleErrorCode.FileNotFoundError.value)
+    try:
+        img = get_image_from_path('abstract123.png')
+    except UpscaleException as e:
+        assert e.code == 404 and e.message == 'Failed to upload image. try again.' and e.log == 'Wrong image path, Please check the input image path'
 
 # 시나리오 4
 # unnormal image

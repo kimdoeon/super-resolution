@@ -39,7 +39,10 @@ def get_image_from_path(origin_img_name: str):
     """
     # get image from path
     origin_img_path = os.path.abspath(os.path.join(user_folder_path, origin_img_name))
-    image = Image.open(origin_img_path).convert("RGB")
+    if os.path.exists(origin_img_path):
+        image = Image.open(origin_img_path).convert("RGB")
+    else:
+        raise UpscaleException(**UpscaleErrorCode.FileNotFoundError.value)
 
     return image
 
