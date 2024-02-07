@@ -35,7 +35,7 @@ class UpscaleManager:
 
 # ------------------
 
-    def get_image_from_path(origin_img_name: str, self):
+    def get_image_from_path(self, origin_img_name: str):
         """
         Get image for Upscale
         Param:
@@ -65,8 +65,9 @@ class UpscaleManager:
         Description:
             - image should be pillow Image
         """
-        api_key = self.token
-        origin_img_path = os.path.abspath(os.path.join(self.user_folder_path, origin_img_name))
+        if api_key is None:
+            api_key = self.token
+        origin_img_path = os.path.abspath(os.path.join(self.user_folder_path, 'upscaled_' + origin_img_name))
 
         stability_api = client.StabilityInference(
             key=api_key,  # API Key reference.
