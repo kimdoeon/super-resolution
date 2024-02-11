@@ -2,3 +2,6 @@
 sample
 __pycache__
 .pytest_cache
+.png
+.jpg
+.jpeg
